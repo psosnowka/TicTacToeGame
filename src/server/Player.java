@@ -1,6 +1,7 @@
 package server;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -11,18 +12,30 @@ public class Player extends Thread {
     Game game;
     String mark;
     BufferedReader in;
+    DataOutputStream output;
+    DataInputStream input;
     PrintWriter out;
-
 
     public Player(Socket socket, Game game, String mark) {
         this.mark = mark;
         this.socket = socket;
         this.game = game;
+
+        InetAddress addr = socket.getInetAddress();
+        System.out.println("Connection made to : " + addr.getHostName() + " (" + addr.getHostAddress() + ")");
         try {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println("CONNECT");
-            out.println("WAIT_FOR_OPPONENT");
+            output = new DataOutputStream(socket.getOutputStream());
+            input = new DataInputStream(socket.getInputStream());
+//            out.println("CONNECT");
+            sendRequest("CONNECT");
+//            output.writeBytes("CONNECT");
+//            output.writeInt(message.length); // write length of the message
+//            output.write(message);
+//            out.println("WAIT_FOR_OPPONENT");
+//            output.writeBytes("WAIT_FOR_OPPONENT");
+            sendRequest("WAIT_FOR_OPPONENT");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -31,19 +44,24 @@ public class Player extends Thread {
     public void run() {
         try {
             String message = null;
-            out.println("START_GAME");
-            out.println("MARK " + mark);
-            while (!((message = in.readLine()).equals("QUIT"))) {
-
+//            out.println("START_GAME");
+            sendRequest("START_GAME");
+//            out.println("MARK " + mark);
+            sendRequest("MARK " + mark);
+            while (true) {
+                message = receiveRequest();
                 log(message);
                 if (message.startsWith("MOVE")) {
                     int i = Integer.parseInt(message.substring(5));
                     if (i < 0 || i > 8) {
-                        out.println("INVALID MOVE");
+//                        out.println("INVALID MOVE");
+                        sendRequest("INVALID MOVE");
                     } else if (!game.setMove(i, this)) {
-                        out.println("BAD MOVE");
+//                        out.println("BAD MOVE");
+                        sendRequest("BAD MOVE");
                     } else {
-                        out.println("ACCEPT");
+//                        out.println("ACCEPT");
+                        sendRequest("ACCEPT");
                         if (game.isWin()) {
                             win();
                         } else if (game.isFiled()) {
@@ -54,7 +72,12 @@ public class Player extends Thread {
                 }
             }
         } catch (IOException e) {
-            opponent.sendMessage("OPONENT_DISCONECT");
+//            opponent.sendMessage("OPONENT_DISCONECT");
+            try {
+                opponent.sendRequest("OPONENT_DISCONECT");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             log("PLAYER_DISCONNET");
         }
     }
@@ -64,8 +87,9 @@ public class Player extends Thread {
         out.println(message);
     }
 
-    public void oponentMove(int i) {
-        out.println("OPPONENT_MOVE " + i);
+    public void oponentMove(int i) throws IOException {
+//        out.println("OPPONENT_MOVE " + i);
+        sendRequest("OPPONENT_MOVE " + i);
     }
 
     public void log(String message) {
@@ -76,25 +100,45 @@ public class Player extends Thread {
         this.opponent = opponent;
     }
 
-    public void win() {
-        out.println("WIN");
+    public void win() throws IOException {
+//        out.println("WIN");
+        sendRequest("WIN");
         opponent.loose();
     }
 
-    public void draw() {
-        out.println("DRAW");
-        opponent.out.println("DRAW");
+    public void draw() throws IOException {
+//        out.println("DRAW");
+        sendRequest("DRAW");
+//        opponent.out.println("DRAW");
+        opponent.sendRequest("DRAW");
     }
 
-    public void loose() {
-        out.println("LOOSE");
+    public void loose() throws IOException {
+//        out.println("LOOSE");
+        sendRequest("LOOSE");
     }
 
-    public void youStart() {
-        out.println("YOU_START");
+    public void youStart() throws IOException {
+//        out.println("YOU_START");
+        sendRequest("YOU_START");
     }
 
-    public void opponentStart() {
-        out.println("OPPONENT_START");
+    public void opponentStart() throws IOException {
+//        out.println("OPPONENT_START");
+        sendRequest("OPPONENT_START");
     }
+
+    public void sendRequest(String msg) throws IOException {
+        byte[] bytes = ReqResConverter.StringToByte(msg);
+        output.writeInt(bytes.length);
+        output.write(bytes);
+    }
+
+    public String receiveRequest() throws IOException {
+        int lenght = input.readInt();
+        byte[] responsebyte = new byte[lenght];
+        input.readFully(responsebyte, 0, responsebyte.length);
+        return ReqResConverter.ByteToString(responsebyte);
+    }
+
 }

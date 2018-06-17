@@ -1,13 +1,12 @@
 package client;
 
+import server.ReqResConverter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.sql.Time;
 import java.time.LocalDate;
@@ -20,6 +19,9 @@ public class Client {
     private boolean endGame = false;
     String mark;
     String opponentMark;
+
+    DataInputStream dataInputStream;
+    DataOutputStream output;
 
     private JFrame frame = new JFrame("Tic Tac Toe");
     private JLabel messageLabel = new JLabel("asdasdasd");
@@ -40,6 +42,8 @@ public class Client {
         Socket socket = new Socket("localhost", 22222);
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        dataInputStream = new DataInputStream(socket.getInputStream());
+        output = new DataOutputStream(socket.getOutputStream());
         setFrame(frame, out);
         receiveFromServer(in);
 
@@ -49,8 +53,11 @@ public class Client {
         String msg;
 
         while (true) {
-            msg = in.readLine();
+//            msg = in.read();
+
+            msg = getResponse(dataInputStream);
             log(msg);
+
             if (msg.endsWith("ACCEPT")) {
                 messageLabel.setText("Ruch przeciwnika");
                 currentSquare.setText(mark);
@@ -107,7 +114,12 @@ public class Client {
                         return;
                     if (!currentSquare.isEmpty())
                         return;
-                    out.println("MOVE " + j);
+//                    out.println("MOVE " + j);
+                    try {
+                        sendRequest("MOVE " + j);
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
                 }
             });
             boardPanel.add(board[i]);
@@ -129,7 +141,20 @@ public class Client {
         System.out.println(LocalTime.now() + " - " + message);
     }
 
+    private String getResponse(DataInputStream dataInputStream) throws IOException {
+        int lenght = dataInputStream.readInt();
+        byte[] responsebyte = new byte[lenght];
+        dataInputStream.readFully(responsebyte, 0, responsebyte.length);
+        return ReqResConverter.ByteToString(responsebyte);
+    }
 
+    private void sendRequest(String message) throws IOException {
+        byte[] bytes = ReqResConverter.StringToByte(message);
+        output.writeInt(bytes.length);
+        output.write(bytes);
+    }
+
+    public
     static class Square extends JPanel {
         JLabel label = new JLabel((Icon) null);
 
@@ -154,5 +179,6 @@ public class Client {
             label.setIcon(icon);
         }
     }
+
 
 }

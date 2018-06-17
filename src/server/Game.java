@@ -1,5 +1,7 @@
 package server;
 
+import java.io.IOException;
+
 public class Game {
     private Player player1;
     private Player player2;
@@ -24,7 +26,7 @@ public class Game {
         this.player2 = player2;
     }
 
-    public synchronized boolean setMove(int move, Player player) {
+    public synchronized boolean setMove(int move, Player player) throws IOException {
         if (player == currentPlayer && gamePool[move] == null) {
             gamePool[move] = player;
             player.opponent.oponentMove(move);
@@ -54,17 +56,17 @@ public class Game {
         return true;
     }
 
-    public void draw() {
+    public void draw() throws IOException {
         player1.draw();
         player2.draw();
     }
 
-    public void startGame() {
+    public void startGame() throws IOException {
         player1.youStart();
         player2.opponentStart();
     }
 
-    public void win(Player player) {
+    public void win(Player player) throws IOException {
         player.win();
         player.opponent.loose();
     }
