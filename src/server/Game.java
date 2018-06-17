@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 
 public class Game {
+    private static int SESSION_ID = 0;
     private Player player1;
     private Player player2;
     private Player currentPlayer;
@@ -13,13 +14,16 @@ public class Game {
             null, null, null};
 
     public Game() {
+        SESSION_ID++;
+    }
 
+    public int getSessionId() {
+        return SESSION_ID;
     }
 
     public void setPlayer1(Player player1) {
         this.player1 = player1;
         currentPlayer = player1;
-
     }
 
     public void setPlayer2(Player player2) {

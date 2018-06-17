@@ -50,8 +50,11 @@ public class Player extends Thread {
             sendRequest("MARK " + mark);
             while (true) {
                 message = receiveRequest();
-                log(message);
-                if (message.startsWith("MOVE")) {
+//                log(message);
+                if (message == null) {
+                    System.out.println("msg");
+                } else if (message.startsWith("MOVE")) {
+                    log(message);
                     int i = Integer.parseInt(message.substring(5));
                     if (i < 0 || i > 8) {
 //                        out.println("INVALID MOVE");
@@ -69,25 +72,24 @@ public class Player extends Thread {
                         }
                     }
 
+                } else {
+                    sendRequest("");
                 }
             }
         } catch (IOException e) {
 //            opponent.sendMessage("OPONENT_DISCONECT");
-            try {
-                opponent.sendRequest("OPONENT_DISCONECT");
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            opponent.sendMessage("OPONENT_DISCONECT");
             log("PLAYER_DISCONNET");
         }
     }
 
 
     public void sendMessage(String message) {
-        out.println(message);
+//        out.println(message);
+        sendRequest("OPONENT_DISCONECT");
     }
 
-    public void oponentMove(int i) throws IOException {
+    public void oponentMove(int i) {
 //        out.println("OPPONENT_MOVE " + i);
         sendRequest("OPPONENT_MOVE " + i);
     }
@@ -100,7 +102,7 @@ public class Player extends Thread {
         this.opponent = opponent;
     }
 
-    public void win() throws IOException {
+    public void win() {
 //        out.println("WIN");
         sendRequest("WIN");
         opponent.loose();
@@ -113,32 +115,44 @@ public class Player extends Thread {
         opponent.sendRequest("DRAW");
     }
 
-    public void loose() throws IOException {
+    public void loose() {
 //        out.println("LOOSE");
         sendRequest("LOOSE");
     }
 
-    public void youStart() throws IOException {
+    public void youStart() {
 //        out.println("YOU_START");
         sendRequest("YOU_START");
     }
 
-    public void opponentStart() throws IOException {
+    public void opponentStart() {
 //        out.println("OPPONENT_START");
         sendRequest("OPPONENT_START");
     }
 
-    public void sendRequest(String msg) throws IOException {
+    public void sendRequest(String msg) {
         byte[] bytes = ReqResConverter.StringToByte(msg);
-        output.writeInt(bytes.length);
-        output.write(bytes);
+        try {
+            output.writeInt(bytes.length);
+            output.write(bytes);
+
+        } catch (IOException e) {
+//            e.printStackTrace();
+
+        }
     }
 
-    public String receiveRequest() throws IOException {
-        int lenght = input.readInt();
-        byte[] responsebyte = new byte[lenght];
-        input.readFully(responsebyte, 0, responsebyte.length);
-        return ReqResConverter.ByteToString(responsebyte);
+    public String receiveRequest() {
+        int lenght = 0;
+        try {
+            lenght = input.readInt();
+            byte[] responsebyte = new byte[lenght];
+            input.readFully(responsebyte, 0, responsebyte.length);
+            return ReqResConverter.ByteToString(responsebyte);
+        } catch (IOException e) {
+//            e.printStackTrace();
+        }
+        return "";
     }
 
 }

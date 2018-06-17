@@ -30,7 +30,7 @@ public class TCPServer {
             first.start();
             second.start();
             game.startGame();
-
+            System.out.println("ID_GAME: "+ game.getSessionId());
         }
     }
 }

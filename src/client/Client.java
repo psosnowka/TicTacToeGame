@@ -115,11 +115,7 @@ public class Client {
                     if (!currentSquare.isEmpty())
                         return;
 //                    out.println("MOVE " + j);
-                    try {
-                        sendRequest("MOVE " + j);
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+                    sendRequest("MOVE " + j);
                 }
             });
             boardPanel.add(board[i]);
@@ -141,17 +137,29 @@ public class Client {
         System.out.println(LocalTime.now() + " - " + message);
     }
 
-    private String getResponse(DataInputStream dataInputStream) throws IOException {
-        int lenght = dataInputStream.readInt();
-        byte[] responsebyte = new byte[lenght];
-        dataInputStream.readFully(responsebyte, 0, responsebyte.length);
-        return ReqResConverter.ByteToString(responsebyte);
+    private String getResponse(DataInputStream dataInputStream) {
+        int lenght = 0;
+        try {
+            lenght = dataInputStream.readInt();
+            byte[] responsebyte = new byte[lenght];
+            dataInputStream.readFully(responsebyte, 0, responsebyte.length);
+            return ReqResConverter.ByteToString(responsebyte);
+        } catch (IOException e) {
+            log("Nie mozna odebrac wiadomosci");
+        }
+        return "";
+
     }
 
-    private void sendRequest(String message) throws IOException {
+    private void sendRequest(String message) {
         byte[] bytes = ReqResConverter.StringToByte(message);
-        output.writeInt(bytes.length);
-        output.write(bytes);
+        try {
+            output.writeInt(bytes.length);
+            output.write(bytes);
+        } catch (IOException e) {
+            log("Nie mozna wyslac wiadomosci");
+        }
+
     }
 
     public
