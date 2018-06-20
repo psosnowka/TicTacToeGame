@@ -4,6 +4,7 @@ public class Game {
     private Player player1;
     private Player player2;
     private Player currentPlayer;
+    private static Integer GAME_ID = 0;
 
     private Player[] gamePool = {
             null, null, null,
@@ -11,7 +12,11 @@ public class Game {
             null, null, null};
 
     public Game() {
+        GAME_ID++;
+    }
 
+    public Integer getGameId() {
+        return GAME_ID;
     }
 
     public void setPlayer1(Player player1) {

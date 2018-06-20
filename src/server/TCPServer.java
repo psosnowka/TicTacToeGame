@@ -18,10 +18,10 @@ public class TCPServer {
         while (true) {
             Game game = new Game();
 
-            Player first = new Player(serverSocket.accept(), game,"X");
+            Player first = new Player(serverSocket.accept(), game, "X", game.getGameId());
             game.setPlayer1(first);
 
-            Player second = new Player(serverSocket.accept(), game,"O");
+            Player second = new Player(serverSocket.accept(), game, "O", game.getGameId());
             game.setPlayer2(second);
 
             first.setOpponent(second);

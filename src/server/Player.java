@@ -1,28 +1,33 @@
 package server;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class Player extends Thread {
-    Socket socket;
+    private int gameId;
+    private Socket socket;
     Player opponent;
-    Game game;
-    String mark;
-    BufferedReader in;
-    PrintWriter out;
+    private Game game;
+    private String mark;
+    private BufferedReader in;
+    private PrintWriter out;
+    private InetAddress inetAddress;
 
-
-    public Player(Socket socket, Game game, String mark) {
+    public Player(Socket socket, Game game, String mark, int gameId) {
+        this.gameId = gameId;
         this.mark = mark;
         this.socket = socket;
+        inetAddress = socket.getInetAddress();
         this.game = game;
         try {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out.println("CONNECT");
             out.println("WAIT_FOR_OPPONENT");
+            log("Player " + inetAddress.getHostName() + " PORT: " + socket.getPort() + " is connected");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -35,7 +40,7 @@ public class Player extends Thread {
             out.println("MARK " + mark);
             while (!((message = in.readLine()).equals("QUIT"))) {
 
-                log(message);
+                log("Game_id: " + gameId + " - " + message);
                 if (message.startsWith("MOVE")) {
                     int i = Integer.parseInt(message.substring(5));
                     if (i < 0 || i > 8) {
@@ -51,11 +56,18 @@ public class Player extends Thread {
                         }
                     }
 
+                } else if (message.startsWith("QUIT")) {
+                    log("PLAYER " + inetAddress.getHostName() + " PORT " + socket.getPort() + " DISCONNET");
+                    finalize();
+                } else {
+                    out.println("BAD_REQUEST");
                 }
             }
         } catch (IOException e) {
             opponent.sendMessage("OPONENT_DISCONECT");
-            log("PLAYER_DISCONNET");
+            log("PLAYER " + inetAddress.getHostName() + " PORT " + socket.getPort() + " DISCONNET");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
     }
 
@@ -69,7 +81,7 @@ public class Player extends Thread {
     }
 
     public void log(String message) {
-        System.out.println(LocalTime.now() + " - " + message);
+        System.out.println(LocalTime.now() + " " + message);
     }
 
     public void setOpponent(Player opponent) {

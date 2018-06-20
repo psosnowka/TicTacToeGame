@@ -83,8 +83,9 @@ public class Client {
                 messageLabel.setText("Ty zaczynasz");
             } else if (msg.startsWith("OPPONENT_START")) {
                 messageLabel.setText("Przeciwnik zaczyna");
+            } else if (msg.startsWith("BAD_REQUEST")) {
+                messageLabel.setText("BAD_REQUEST");
             }
-
             if (msg.equals("QUIT"))
                 return;
         }

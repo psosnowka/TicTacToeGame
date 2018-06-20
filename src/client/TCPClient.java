@@ -25,10 +25,15 @@ public class TCPClient {
         return sb.toString();
     }
 
-    public static void main(String argv[]) throws Exception {
+    public static void main(String argv[]) {
         int port = 222222;
         String host = "localhost";
         Client client = new Client(host, port);
-        client.onClientStart();
+        try {
+            client.onClientStart();
+        } catch (IOException e) {
+            System.out.println("SERVER NOT RESPONSE AT PORT: " + port+ " AND HOST: "+ host);
+        }
+
     }
 }
