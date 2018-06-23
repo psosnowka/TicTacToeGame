@@ -61,11 +61,11 @@ public class Player extends Thread {
                         }
                     }
 
-                } else if (message.startsWith("QUIT")) {
+                } else if (message.equals("QUIT")) {
                     log("PLAYER " + inetAddress.getHostName() + " PORT " + socket.getPort() + " DISCONNET");
                     finalize();
                 } else {
-                    out.println("BAD_REQUEST");
+                    sendToClient("BAD_REQUEST");
                 }
             }
         } catch (IOException e) {

@@ -1,4 +1,26 @@
 C - klient
 S - serwer
 
-MESSAGE N - zaznaczone pole
+KOMENDY WYSYLANE PRZEZ SERWER:
+
+CONNECT - połączenie z serwerem
+WAIT_FOR_OPPONENT - czekanie na przeciwnika
+START_GAME - start gry
+MARK + {O lub X} - przydzielenie znaku X lub O
+
+INVALID MOVE - nieprawidlowy ruch (ruch który jest niezgodny z protokołem)
+BAD MOVE - ruch który jest niezgodny z rozgrywnka
+ACCEPT - poprawny ruch
+BAD_REQUEST - nieprzewidzane rządanie
+OPONENT_DISCONECT - rozłączenie przeciwnika
+OPPONENT_MOVE + {nr_pola} - ruch przeciwnika na określone pole
+WIN - wygrana
+DRAW - remis
+LOOSE - przegrana
+YOU_START - ty zaczynasz
+OPPONENT_START - przeciwnik zaczyna
+INVALID_MESSAGE - serwer nie odczytal calej wiadomosci (brak ::)
+
+KOMENDY WYSYLANE PRZEZ KLIENTA:
+MOVE + {nr_pola} - ruch klienta
+QUIT - koniec rozgrywki
