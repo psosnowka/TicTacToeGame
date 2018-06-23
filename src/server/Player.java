@@ -25,8 +25,9 @@ public class Player extends Thread {
         try {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println("CONNECT");
-            out.println("WAIT_FOR_OPPONENT");
+            sendToClient("CONNECT");
+            sendToClient("WAIT_FOR_OPPONENT");
+
             log("Player " + inetAddress.getHostName() + " PORT: " + socket.getPort() + " is connected");
         } catch (IOException e) {
             e.printStackTrace();
@@ -36,19 +37,23 @@ public class Player extends Thread {
     public void run() {
         try {
             String message = null;
-            out.println("START_GAME");
-            out.println("MARK " + mark);
-            while (!((message = in.readLine()).equals("QUIT"))) {
+//            out.println("START_GAME");
+            sendToClient("START_GAME");
+//            out.println("MARK " + mark);
+            sendToClient("MARK " + mark);
+            while (true) {
+                message = in.readLine();
+                message = decode(message);
 
                 log("Game_id: " + gameId + " - " + message);
                 if (message.startsWith("MOVE")) {
                     int i = Integer.parseInt(message.substring(5));
                     if (i < 0 || i > 8) {
-                        out.println("INVALID MOVE");
+                        sendToClient("INVALID MOVE");
                     } else if (!game.setMove(i, this)) {
-                        out.println("BAD MOVE");
+                        sendToClient("BAD MOVE");
                     } else {
-                        out.println("ACCEPT");
+                        sendToClient("ACCEPT");
                         if (game.isWin()) {
                             win();
                         } else if (game.isFiled()) {
@@ -73,11 +78,12 @@ public class Player extends Thread {
 
 
     public void sendMessage(String message) {
-        out.println(message);
+//        out.println(message);
+        sendToClient(message);
     }
 
     public void oponentMove(int i) {
-        out.println("OPPONENT_MOVE " + i);
+        sendToClient("OPPONENT_MOVE " + i);
     }
 
     public void log(String message) {
@@ -89,24 +95,36 @@ public class Player extends Thread {
     }
 
     public void win() {
-        out.println("WIN");
+        sendToClient("WIN");
         opponent.loose();
     }
 
     public void draw() {
-        out.println("DRAW");
-        opponent.out.println("DRAW");
+        sendToClient("DRAW");
+        opponent.sendToClient("DRAW");
     }
 
     public void loose() {
-        out.println("LOOSE");
+        sendToClient("LOOSE");
     }
 
     public void youStart() {
-        out.println("YOU_START");
+        sendToClient("YOU_START");
     }
 
     public void opponentStart() {
-        out.println("OPPONENT_START");
+        sendToClient("OPPONENT_START");
     }
+
+    public void sendToClient(String message) {
+        out.println(message + "::");
+    }
+
+    public String decode(String message) {
+        if (message.endsWith("::")) {
+            return message.substring(0, message.length() - 2);
+        }
+        return "INVALID_MESSAGE";
+    }
+
 }

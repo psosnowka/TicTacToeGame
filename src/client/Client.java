@@ -20,6 +20,7 @@ public class Client {
     private boolean endGame = false;
     String mark;
     String opponentMark;
+    PrintWriter out;
 
     private JFrame frame = new JFrame("Tic Tac Toe");
     private JLabel messageLabel = new JLabel("asdasdasd");
@@ -38,7 +39,7 @@ public class Client {
 
     private void connectToServer() throws IOException {
         Socket socket = new Socket("localhost", 22222);
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         setFrame(frame, out);
         receiveFromServer(in);
@@ -50,7 +51,9 @@ public class Client {
 
         while (true) {
             msg = in.readLine();
+            msg = decode(msg);
             log(msg);
+
             if (msg.endsWith("ACCEPT")) {
                 messageLabel.setText("Ruch przeciwnika");
                 currentSquare.setText(mark);
@@ -83,11 +86,12 @@ public class Client {
                 messageLabel.setText("Ty zaczynasz");
             } else if (msg.startsWith("OPPONENT_START")) {
                 messageLabel.setText("Przeciwnik zaczyna");
-            } else if (msg.startsWith("BAD_REQUEST")) {
-                messageLabel.setText("BAD_REQUEST");
-            }
-            if (msg.equals("QUIT"))
+            } else if (msg.startsWith("INVALID_MESSAGE")) {
+                messageLabel.setText("INVALID_MESSAGE");
+            } else if (msg.equals("QUIT")) {
                 return;
+            }
+
         }
     }
 
@@ -108,7 +112,10 @@ public class Client {
                         return;
                     if (!currentSquare.isEmpty())
                         return;
-                    out.println("MOVE " + j);
+//                    out.println("MOVE " + j);
+                    sendToServer("MOVE " + j);
+
+
                 }
             });
             boardPanel.add(board[i]);
@@ -130,6 +137,17 @@ public class Client {
         System.out.println(LocalTime.now() + " - " + message);
     }
 
+
+    public void sendToServer(String message) {
+        out.println(message + "::");
+    }
+
+    public String decode(String message) {
+        if (message.endsWith("::")) {
+            return message.substring(0, message.length() - 2);
+        }
+        return "INVALID_MESSAGE";
+    }
 
     static class Square extends JPanel {
         JLabel label = new JLabel((Icon) null);
